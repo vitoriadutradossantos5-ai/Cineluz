@@ -3,90 +3,254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineLuz</title>
+  <title>CineLuz AI</title>
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #10051f;
       color: white;
-      text-align: center;
+      background: linear-gradient(135deg, #10051f, #241044, #071b35);
+      min-height: 100vh;
     }
 
     header {
-      padding: 25px;
-      background: #241044;
+      text-align: center;
+      padding: 35px 20px 20px;
     }
 
     h1 {
       color: #ffcc33;
-      font-size: 36px;
+      font-size: 38px;
+      margin: 0 0 10px;
     }
 
-    .busca {
-      padding: 12px;
-      width: 80%;
-      border-radius: 20px;
-      border: none;
-      font-size: 16px;
+    .subtitulo {
+      color: #ddd;
+      font-size: 17px;
     }
 
-    .filmes {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
+    .painel {
+      width: 92%;
+      max-width: 700px;
+      margin: 20px auto;
       padding: 25px;
+      background: rgba(36, 16, 68, .9);
+      border-radius: 20px;
+      box-shadow: 0 0 25px #6c35b5;
     }
 
-    .filme {
-      background: #241044;
-      border-radius: 15px;
-      padding: 15px;
-      width: 220px;
-      box-shadow: 0 0 12px #6c35b5;
+    label {
+      display: block;
+      text-align: left;
+      margin: 15px 0 8px;
+      font-weight: bold;
     }
 
-    .filme h2 {
-      color: #ffcc33;
+    textarea, select {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
     }
 
     button {
-      background: #ffcc33;
+      width: 100%;
+      margin-top: 20px;
+      padding: 15px;
       border: none;
-      padding: 10px 18px;
-      border-radius: 20px;
+      border-radius: 25px;
+      background: #ffcc33;
+      color: #241044;
+      font-size: 17px;
       font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #777;
+      color: #ddd;
+      cursor: not-allowed;
+    }
+
+    .contador {
+      text-align: center;
+      margin: 20px 0;
+      color: #ffcc33;
+      font-weight: bold;
+    }
+
+    .aviso {
+      display: none;
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #5b1d35;
+      color: #ffd6d6;
+      text-align: center;
+    }
+
+    .resultado {
+      display: none;
+      margin-top: 25px;
+      padding: 20px;
+      text-align: center;
+      border-radius: 15px;
+      background: #160b2b;
+    }
+
+    video {
+      width: 100%;
+      max-height: 350px;
+      border-radius: 12px;
+      margin-top: 15px;
+      background: #000;
+    }
+
+    .observacao {
+      color: #bbb;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🎬 CineLuz</h1>
-    <p>Encontre seu próximo filme favorito</p>
-    <input class="busca" type="text" placeholder="Pesquisar filmes...">
+    <h1>🎬 CineLuz AI</h1>
+    <p class="subtitulo">Crie vídeos com inteligência artificial</p>
   </header>
 
-  <main class="filmes">
-    <div class="filme">
-      <h2>Filmes de Ação</h2>
-      <p>Os melhores filmes para assistir hoje.</p>
-      <button>Ver filmes</button>
+  <section class="painel">
+    <div class="contador" id="contador">
+      Vídeos disponíveis: 59
     </div>
 
-    <div class="filme">
-      <h2>Comédia</h2>
-      <p>Filmes para rir e se divertir.</p>
-      <button>Ver filmes</button>
+    <label for="descricao">Descreva o vídeo que deseja criar:</label>
+    <textarea id="descricao" placeholder="Exemplo: Um vídeo realista de uma cidade futurista à noite, com carros voadores..."></textarea>
+
+    <label for="duracao">Duração desejada:</label>
+    <select id="duracao">
+      <option value="10">10 segundos</option>
+      <option value="30">30 segundos</option>
+      <option value="60">1 minuto</option>
+      <option value="180">3 minutos</option>
+      <option value="600">10 minutos</option>
+    </select>
+
+    <button id="criarBtn" onclick="criarVideo()">✨ Criar vídeo com IA</button>
+
+    <div class="aviso" id="aviso"></div>
+
+    <div class="resultado" id="resultado">
+      <h2>Seu vídeo está pronto! 🎉</h2>
+      <p id="mensagemResultado"></p>
+      <video id="video" controls></video>
     </div>
 
-    <div class="filme">
-      <h2>Romance</h2>
-      <p>Histórias emocionantes e inesquecíveis.</p>
-      <button>Ver filmes</button>
-    </div>
-  </main>
+    <p class="observacao">
+      Esta versão demonstra a interface e o limite de vídeos.
+      Para gerar vídeos reais e longos, será necessário conectar uma API de vídeo com IA.
+    </p>
+  </section>
+
+  <script>
+    const LIMITE = 59;
+    const ESPERA = 34 * 60 * 1000;
+
+    let usados = Number(localStorage.getItem("videosUsados")) || 0;
+    let bloqueadoAte = Number(localStorage.getItem("bloqueadoAte")) || 0;
+
+    const contador = document.getElementById("contador");
+    const criarBtn = document.getElementById("criarBtn");
+    const aviso = document.getElementById("aviso");
+
+    function atualizarTela() {
+      const agora = Date.now();
+
+      if (bloqueadoAte > agora) {
+        criarBtn.disabled = true;
+        aviso.style.display = "block";
+        atualizarContagemRegressiva();
+        return;
+      }
+
+      if (bloqueadoAte !== 0) {
+        usados = 0;
+        bloqueadoAte = 0;
+        localStorage.setItem("videosUsados", "0");
+        localStorage.removeItem("bloqueadoAte");
+      }
+
+      contador.textContent = `Vídeos disponíveis: ${LIMITE - usados}`;
+      criarBtn.disabled = false;
+      aviso.style.display = "none";
+    }
+
+    function atualizarContagemRegressiva() {
+      const restante = bloqueadoAte - Date.now();
+
+      if (restante <= 0) {
+        atualizarTela();
+        return;
+      }
+
+      const minutos = Math.floor(restante / 60000);
+      const segundos = Math.floor((restante % 60000) / 1000);
+
+      contador.textContent = "Limite atingido";
+      aviso.textContent =
+        `Aguarde ${minutos}m ${segundos}s para criar vídeos novamente.`;
+
+      setTimeout(atualizarContagemRegressiva, 1000);
+    }
+
+    function criarVideo() {
+      const descricao = document.getElementById("descricao").value.trim();
+      const duracao = document.getElementById("duracao").value;
+
+      if (!descricao) {
+        alert("Descreva o vídeo primeiro.");
+        return;
+      }
+
+      if (usados >= LIMITE) {
+        bloqueadoAte = Date.now() + ESPERA;
+        localStorage.setItem("bloqueadoAte", bloqueadoAte);
+        atualizarTela();
+        return;
+      }
+
+      usados++;
+      localStorage.setItem("videosUsados", usados);
+
+      document.getElementById("resultado").style.display = "block";
+      document.getElementById("mensagemResultado").textContent =
+        `Pedido recebido: vídeo de ${duracao} segundos.`;
+
+      /*
+        Aqui entrará a API real de geração de vídeo.
+        O endereço do vídeo deverá ser colocado no campo abaixo:
+      */
+
+      document.getElementById("video").removeAttribute("src");
+      document.getElementById("video").load();
+
+      atualizarTela();
+    }
+
+    atualizarTela();
+  </script>
 
 </body>
 </html>
