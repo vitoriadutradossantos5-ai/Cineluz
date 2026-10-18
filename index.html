@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineLuz</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #10051f;
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      padding: 25px;
+      background: #241044;
+    }
+
+    h1 {
+      color: #ffcc33;
+      font-size: 36px;
+    }
+
+    .busca {
+      padding: 12px;
+      width: 80%;
+      border-radius: 20px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .filmes {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 25px;
+    }
+
+    .filme {
+      background: #241044;
+      border-radius: 15px;
+      padding: 15px;
+      width: 220px;
+      box-shadow: 0 0 12px #6c35b5;
+    }
+
+    .filme h2 {
+      color: #ffcc33;
+    }
+
+    button {
+      background: #ffcc33;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎬 CineLuz</h1>
+    <p>Encontre seu próximo filme favorito</p>
+    <input class="busca" type="text" placeholder="Pesquisar filmes...">
+  </header>
+
+  <main class="filmes">
+    <div class="filme">
+      <h2>Filmes de Ação</h2>
+      <p>Os melhores filmes para assistir hoje.</p>
+      <button>Ver filmes</button>
+    </div>
+
+    <div class="filme">
+      <h2>Comédia</h2>
+      <p>Filmes para rir e se divertir.</p>
+      <button>Ver filmes</button>
+    </div>
+
+    <div class="filme">
+      <h2>Romance</h2>
+      <p>Histórias emocionantes e inesquecíveis.</p>
+      <button>Ver filmes</button>
+    </div>
+  </main>
+
+</body>
+</html>
