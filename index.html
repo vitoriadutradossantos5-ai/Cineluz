@@ -1,256 +1,78 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CineLuz AI</title>
-  <style>
-    * { box-sizing: border-box; }
+import os
+from gtts import gTTS
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: white;
-      background: linear-gradient(135deg, #10051f, #241044, #071b35);
-      min-height: 100vh;
-    }
+def criar_video_de_dados(dados, arquivo_saida="video_gerado.mp4"):
+    """
+    Gera um vídeo combinando textos convertidos em voz e imagens.
+    
+    :param dados: Lista de dicionários contendo 'texto' e 'imagem'.
+    :param arquivo_saida: Nome do arquivo de vídeo final.
+    """
+    clips_video = arquivos_temporarios = []
+    
+    print("Iniciando a geração do vídeo...")
 
-    header {
-      text-align: center;
-      padding: 35px 20px 20px;
-    }
+    try:
+        for i, item in enumerate(dados):
+            texto = item["texto"]
+            imagem_path = item["imagem"]
+            
+            print(f"Processando cena {i+1} de {len(dados)}...")
+            
+            # 1. Gerar áudio a partir do texto (Text-to-Speech)
+            audio_path = f"temp_audio_{i}.mp3"
+            arquivos_temporarios.append(audio_path)
+            
+            tts = gTTS(text=texto, lang='pt', tld='com.br')
+            tts.save(audio_path)
+            
+            # 2. Carregar o áudio e obter sua duração exata
+            audio_clip = AudioFileClip(audio_path)
+            duracao = audio_clip.duration
+            
+            # 3. Criar o clipe de imagem com a mesma duração do áudio
+            image_clip = ImageClip(imagem_path).set_duration(duracao)
+            
+            # 4. Unir a imagem ao áudio correspondente
+            clipe_cena = image_clip.set_audio(audio_clip)
+            clips_video.append(clipe_cena)
+            
+        print("Unindo todas as cenas em um único vídeo...")
+        
+        # 5. Concatenar todos os clipes em um arquivo final
+        video_final = concatenate_videoclips(clips_video, method="compose")
+        video_final.write_videofile(
+            arquivo_saida, 
+            fps=24, 
+            codec='libx264', 
+            audio_codec='aac',
+            preset='medium'
+        )
+        
+        print(f"Sucesso! Vídeo salvo como: {arquivo_saida}")
 
-    h1 {
-      color: #ffcc33;
-      font-size: 38px;
-      margin: 0 0 10px;
-    }
+    finally:
+        # Limpar arquivos de áudio temporários
+        print("Limpando arquivos temporários...")
+        for arq in arquivos_temporarios:
+            if os.path.exists(arq):
+                os.remove(arq)
 
-    .subtitulo {
-      color: #ddd;
-      font-size: 17px;
-    }
-
-    .painel {
-      width: 92%;
-      max-width: 700px;
-      margin: 20px auto;
-      padding: 25px;
-      background: rgba(36, 16, 68, .9);
-      border-radius: 20px;
-      box-shadow: 0 0 25px #6c35b5;
-    }
-
-    label {
-      display: block;
-      text-align: left;
-      margin: 15px 0 8px;
-      font-weight: bold;
-    }
-
-    textarea, select {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      background: #f5f5f5;
-      color: #222;
-    }
-
-    textarea {
-      min-height: 130px;
-      resize: vertical;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 20px;
-      padding: 15px;
-      border: none;
-      border-radius: 25px;
-      background: #ffcc33;
-      color: #241044;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      background: #777;
-      color: #ddd;
-      cursor: not-allowed;
-    }
-
-    .contador {
-      text-align: center;
-      margin: 20px 0;
-      color: #ffcc33;
-      font-weight: bold;
-    }
-
-    .aviso {
-      display: none;
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #5b1d35;
-      color: #ffd6d6;
-      text-align: center;
-    }
-
-    .resultado {
-      display: none;
-      margin-top: 25px;
-      padding: 20px;
-      text-align: center;
-      border-radius: 15px;
-      background: #160b2b;
-    }
-
-    video {
-      width: 100%;
-      max-height: 350px;
-      border-radius: 12px;
-      margin-top: 15px;
-      background: #000;
-    }
-
-    .observacao {
-      color: #bbb;
-      font-size: 13px;
-      line-height: 1.5;
-      margin-top: 20px;
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <h1>🎬 CineLuz AI</h1>
-    <p class="subtitulo">Crie vídeos com inteligência artificial</p>
-  </header>
-
-  <section class="painel">
-    <div class="contador" id="contador">
-      Vídeos disponíveis: 59
-    </div>
-
-    <label for="descricao">Descreva o vídeo que deseja criar:</label>
-    <textarea id="descricao" placeholder="Exemplo: Um vídeo realista de uma cidade futurista à noite, com carros voadores..."></textarea>
-
-    <label for="duracao">Duração desejada:</label>
-    <select id="duracao">
-      <option value="10">10 segundos</option>
-      <option value="30">30 segundos</option>
-      <option value="60">1 minuto</option>
-      <option value="180">3 minutos</option>
-      <option value="600">10 minutos</option>
-    </select>
-
-    <button id="criarBtn" onclick="criarVideo()">✨ Criar vídeo com IA</button>
-
-    <div class="aviso" id="aviso"></div>
-
-    <div class="resultado" id="resultado">
-      <h2>Seu vídeo está pronto! 🎉</h2>
-      <p id="mensagemResultado"></p>
-      <video id="video" controls></video>
-    </div>
-
-    <p class="observacao">
-      Esta versão demonstra a interface e o limite de vídeos.
-      Para gerar vídeos reais e longos, será necessário conectar uma API de vídeo com IA.
-    </p>
-  </section>
-
-  <script>
-    const LIMITE = 59;
-    const ESPERA = 34 * 60 * 1000;
-
-    let usados = Number(localStorage.getItem("videosUsados")) || 0;
-    let bloqueadoAte = Number(localStorage.getItem("bloqueadoAte")) || 0;
-
-    const contador = document.getElementById("contador");
-    const criarBtn = document.getElementById("criarBtn");
-    const aviso = document.getElementById("aviso");
-
-    function atualizarTela() {
-      const agora = Date.now();
-
-      if (bloqueadoAte > agora) {
-        criarBtn.disabled = true;
-        aviso.style.display = "block";
-        atualizarContagemRegressiva();
-        return;
-      }
-
-      if (bloqueadoAte !== 0) {
-        usados = 0;
-        bloqueadoAte = 0;
-        localStorage.setItem("videosUsados", "0");
-        localStorage.removeItem("bloqueadoAte");
-      }
-
-      contador.textContent = `Vídeos disponíveis: ${LIMITE - usados}`;
-      criarBtn.disabled = false;
-      aviso.style.display = "none";
-    }
-
-    function atualizarContagemRegressiva() {
-      const restante = bloqueadoAte - Date.now();
-
-      if (restante <= 0) {
-        atualizarTela();
-        return;
-      }
-
-      const minutos = Math.floor(restante / 60000);
-      const segundos = Math.floor((restante % 60000) / 1000);
-
-      contador.textContent = "Limite atingido";
-      aviso.textContent =
-        `Aguarde ${minutos}m ${segundos}s para criar vídeos novamente.`;
-
-      setTimeout(atualizarContagemRegressiva, 1000);
-    }
-
-    function criarVideo() {
-      const descricao = document.getElementById("descricao").value.trim();
-      const duracao = document.getElementById("duracao").value;
-
-      if (!descricao) {
-        alert("Descreva o vídeo primeiro.");
-        return;
-      }
-
-      if (usados >= LIMITE) {
-        bloqueadoAte = Date.now() + ESPERA;
-        localStorage.setItem("bloqueadoAte", bloqueadoAte);
-        atualizarTela();
-        return;
-      }
-
-      usados++;
-      localStorage.setItem("videosUsados", usados);
-
-      document.getElementById("resultado").style.display = "block";
-      document.getElementById("mensagemResultado").textContent =
-        `Pedido recebido: vídeo de ${duracao} segundos.`;
-
-      /*
-        Aqui entrará a API real de geração de vídeo.
-        O endereço do vídeo deverá ser colocado no campo abaixo:
-      */
-
-      document.getElementById("video").removeAttribute("src");
-      document.getElementById("video").load();
-
-      atualizarTela();
-    }
-
-    atualizarTela();
-  </script>
-
-</body>
-</html>
+if __name__ == "__main__":
+    # Exemplo de dados estruturados (você pode carregar isso de um JSON, CSV ou Banco de Dados)
+    dados_exemplo = [
+        {
+            "texto": "Olá! Seja bem-vindo ao nosso sistema de criação automatizada de vídeos.",
+            "imagem": "imagem1.jpg" # Certifique-se de ter essa imagem na mesma pasta
+        },
+        {
+            "texto": "Com este script em Python, transformamos dados brutos, textos e imagens em conteúdo visual dinâmico.",
+            "imagem": "imagem2.jpg" # Certifique-se de ter essa imagem na mesma pasta
+        }
+    ]
+    
+    # Executa a função de criação
+    # (Lembre-se de colocar duas imagens chamadas imagem1.jpg e imagem2.jpg no diretório para testar)
+    # criar_video_de_dados(dados_exemplo)
+    
